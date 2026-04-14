@@ -6,7 +6,7 @@ Menghentikan proses secara otomatis ketika kecepatan unduhan berada
 di bawah threshold selama durasi stabil yang ditentukan.
 
 Dependensi:
-    pip install psutil pyyaml pyTelegramBotAPI mss
+    pip install psutil pyyaml pyTelegramBotAPI mss pygame
 
 Jalankan sebagai Administrator/root agar psutil bisa membaca
 koneksi jaringan semua proses.
