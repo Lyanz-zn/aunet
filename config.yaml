@@ -1,0 +1,31 @@
+# Monitoring Settings
+
+# int: integer value
+# float: floating-point value
+# bool: true/false
+# str: string value
+# optional: the setting is not required, if not provided, the default value will be used
+
+RETRY_ATTEMPT: 2 # int, optional
+CHECK_INTERVAL: 5 # int (in seconds), optional
+THRESHOLD_KBPS: 100.0 # float (KB/s), recomennded value > 100 KB/s, optional
+DURATION_STABLE: 2 # int (seconds), optional
+
+IO_THRESHOLD_KBPS: 1000.0 # float (KB/s), recomennded value > 1000 KB/s, optional
+IO_CHECK_INTERVAL: 5 # int (in seconds), optional
+IO_RETRY_ATTEMPT: 2 # int, optional
+IO_DURATION_STABLE: 60 # int (seconds), optional
+
+POST_MONITORING: null # What to do after Monitoring complete, value: [ "shutdown", "sleep", null ], optional
+POST_MONITORING_DELAY: 2 # int (seconds), delay before run POST_MONITORING action, optional
+
+RINGTONE: true # bool, optional, whether to play a ringtone when the monitoring is complete, optional
+RINGTONE_LOOP: 1 # literal value: [int, "loop"], example: 5 or "loop". optional, whether to loop the ringtone until stopped, RINGTONE must be true
+RINGTONE_PATH: "env/ringtone.mp3" # str, optional, path to the ringtone file (mp3 format), RINGTONE must be true, default value is "env/ringtone.mp3" 
+
+# Your Telegram bot token and the chat ID where you want to receive notifications
+
+TELEGRAM_DASHBOARD_ENABLED: true # bool (true/false), optional
+BOT_TOKEN: "" # str, TELEGRAM_MONITORING_ENABLED must be true
+CHAT_ID: "" # str, TELEGRAM_MONITORING_ENABLED must be true
+
