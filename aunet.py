@@ -63,7 +63,10 @@ TARGET_PROCESS_NAME: str = ""  # Diisi saat runtime via input()
 POST_MONITORING: Literal["shutdown", "sleep", None] = None
 POST_MONITORING_DELAY: int = 120  # Detik; rekomendasi > 180 untuk waktu dekompresi
 RINGTONE: bool = False
-RINGTONE_PATH: str = "env/ringtone.mp3"
+RINGTONE_LOOP: int | Literal["loop"] = 10  # Perilaku pemutaran ringtone
+RINGTONE_PATH: str = str(
+    os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "lib/ringtone.mp3")
+)
 
 THRESHOLD_KBPS: float = 100.0  # KB/s batas bawah kecepatan unduhan
 CHECK_INTERVAL: int = 5  # Detik antar pengukuran
@@ -146,6 +149,7 @@ def load_config(path: str = "config.yaml") -> None:
         "IO_RETRY_ATTEMPT": int,
         "IO_DURATION_STABLE": int,
         "RINGTONE": bool,
+        "RINGTONE_LOOP": int | str,
         "RINGTONE_FILE": str | None,
     }
 
@@ -172,6 +176,13 @@ def load_config(path: str = "config.yaml") -> None:
                     continue
 
             if isinstance(value, str) and value.strip() == "":
+                if var == "RINGTONE_LOOP":
+                    if value != "loop":
+                        print(
+                            "[SKIP] Value dari  RINGTONE_LOOP hanya boleh int atau 'loop' (string)"
+                        )
+                        continue
+
                 print(f"[SKIP] {var}: String tidak boleh kosong")
                 continue
 
@@ -907,21 +918,29 @@ def monitor(procs: list[psutil.Process]) -> None:
 
     _finalize(total_recv, iteration)
 
+    # ── Putar ringtone jika diaktifkan ───────────────────────────────────────
     if RINGTONE:
-        att = 10
-        if os.path.exists(r"env/ringtone.mp3"):
+        if os.path.exists(RINGTONE_PATH):
             player = AudioPlayer()
             try:
                 print("[INFO] Memutar ringtone...")
-                while att >= 1:
-                    att -= 1
-                    player.play(file_path=RINGTONE_PATH, block=True)
+                print("[INFO] Tekan Ctrl+C untuk menghentikan ringtone.")
+                if isinstance(RINGTONE_LOOP, int) and RINGTONE_LOOP > 0:
+                    att = RINGTONE_LOOP
+                    while att >= 1:
+                        player.play(file_path=RINGTONE_PATH, block=True)
+                        att -= 1
+                else:
+                    while True:
+                        player.play(file_path=RINGTONE_PATH, block=True)
+
             except KeyboardInterrupt:
                 print("[INFO] Ringtone dihentikan.")
                 player.stop()
         else:
-            print("[ERROR] File audio tidak ditemukan")
+            print(f"[ERROR] File audio {RINGTONE_PATH} tidak ditemukan")
 
+    # ── Tindakan setelah monitoring selesai ─────────────────────────────────
     pma = PostMonitoringAction()
     if POST_MONITORING == "shutdown":
         pma.shutdown()
@@ -930,6 +949,7 @@ def monitor(procs: list[psutil.Process]) -> None:
 
 
 def _proc_alive(p: psutil.Process) -> bool:
+    """Cek apakah proses masih hidup dan bukan zombie."""
     try:
         return p.is_running() and p.status() != psutil.STATUS_ZOMBIE
     except psutil.NoSuchProcess:
@@ -962,6 +982,10 @@ def _finalize(total_recv: float, iteration: int) -> None:
 
 
 class AudioPlayer:
+    """
+    Pemutar audio sederhana menggunakan pygame.mixer.
+    """
+
     def __init__(self):
         self._initialized = False
         self._lock = threading.Lock()
@@ -1131,3 +1155,10 @@ if __name__ == "__main__":
             pass
         print("\n[INFO] Program dihentikan oleh user (Ctrl+C).")
         sys.exit(0)
+    except Exception as e:
+        print(f"\n[ERROR] Kesalahan tidak terduga di main: {e}")
+        try:
+            bot.stop()
+        except NameError:
+            pass
+        sys.exit(1)
