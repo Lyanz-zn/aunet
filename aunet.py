@@ -15,7 +15,6 @@ koneksi jaringan semua proses.
 import os
 import sys
 import time
-from numpy import printoptions
 import yaml
 import threading
 import argparse
@@ -28,6 +27,8 @@ import telebot.apihelper
 import pygame
 from pathlib import Path
 import tempfile
+
+from ctypes import windll
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 
@@ -44,12 +45,26 @@ class UnsupportedOSError(Exception):
 
 ACTIVE: bool = True  # Kontroller loop utama
 
+IS_ADMIN: bool = False
+
 if os.name == "nt":
     USER_OS = "nt"
+    try:
+        IS_ADMIN = windll.shell32.IsUserAnAdmin() != 0
+    except Exception:
+        IS_ADMIN = False
+
 elif os.name == "posix":
     USER_OS = "posix"
+    try:
+        IS_ADMIN = os.geteuid() == 0
+
+    except AttributeError:
+        IS_ADMIN = False
+
 else:
     raise UnsupportedOSError()
+
 
 # ── Konfigurasi Telegram ─────────────────────────────────────────────────────
 
@@ -1220,6 +1235,13 @@ def main() -> None:
 
 if __name__ == "__main__":
     try:
+        clear()
+        if not IS_ADMIN:
+            print(
+                "[WARN] Script tidak dijalankan sebagai Administrator. Beberapa fitur mungkin tidak berfungsi."
+            )
+            if input("Apakah Anda ingin melanjutkan? (y/n): ").strip().lower() != "y":
+                sys.exit(0)
         main()
     except KeyboardInterrupt:
         try:
