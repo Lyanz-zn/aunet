@@ -13,6 +13,7 @@ koneksi jaringan semua proses.
 """
 
 import os
+import pathlib
 import sys
 import time
 import yaml
@@ -25,6 +26,8 @@ import psutil
 import telebot  # pyTelegramBotAPI
 import telebot.apihelper
 import pygame
+from pathlib import Path
+import tempfile
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 
@@ -547,6 +550,23 @@ def kill_procs(procs: list[psutil.Process]) -> None:
 # =============================================================================
 
 
+def _cleanup(tmp_path: Path = Path(tempfile.gettempdir())):
+    """
+    Cleanup file yang digunakan saat monitoring
+    """
+
+    file_patterns = ["aunet-ss*.jpg", "aunet-ss*.jpeg", "aunet-ss*.png"]
+
+    for pat in file_patterns:
+        for f in tmp_path.glob(pat):
+            try:
+                f.unlink()
+            except Exception as e:
+                print(
+                    f"[INFO] Terjadi error tidak terduga saat membersihkan file:\n{e}"
+                )
+
+
 class PostMonitoringAction:
     def __init__(self) -> None:
         self.delay = max(POST_MONITORING_DELAY, 60)
@@ -765,9 +785,11 @@ def monitor_io(procs: list[psutil.Process]) -> None:
                 kill_procs(procs)
                 return
 
+            _cleanup()
             time.sleep(IO_CHECK_INTERVAL)
 
     except KeyboardInterrupt:
+        _cleanup()
         print()
         print("╠" + "═" * 62 + "╣")
         print("║  [INFO] Monitoring I/O dihentikan oleh user (Ctrl+C).        ║")
@@ -903,11 +925,14 @@ def monitor(procs: list[psutil.Process]) -> None:
             time.sleep(CHECK_INTERVAL)
 
     except KeyboardInterrupt:
+        _cleanup()
         print()
         print("╠" + "═" * 62 + "╣")
         print("║  [INFO] Monitoring dihentikan oleh user (Ctrl+C).            ║")
         _finalize(total_recv, iteration)
         sys.exit(0)
+
+    _cleanup()
 
     # ── Screenshot akhir ─────────────────────────────────────────────────────
     if TELEGRAM_DASHBOARD_ENABLED:
@@ -983,7 +1008,7 @@ def _finalize(total_recv: float, iteration: int) -> None:
 
 class AudioPlayer:
     """
-    Pemutar audio sederhana menggunakan pygame.mixer.
+    Pemutar audio menggunakan pygame.mixer.
     """
 
     def __init__(self):
@@ -1020,7 +1045,7 @@ class AudioPlayer:
             t.start()
 
     def stop(self):
-        """Stop audio kapan saja"""
+        """Stopper audio"""
         if self._initialized:
             pygame.mixer.music.stop()
 
@@ -1156,6 +1181,7 @@ if __name__ == "__main__":
         print("\n[INFO] Program dihentikan oleh user (Ctrl+C).")
         sys.exit(0)
     except Exception as e:
+        _cleanup()
         print(f"\n[ERROR] Kesalahan tidak terduga di main: {e}")
         try:
             bot.stop()
