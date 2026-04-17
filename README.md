@@ -4,10 +4,9 @@ aunet adalah tool monitoring proses berbasis network bandwidth dan disk I/O (rea
 
 Tool ini secara otomatis akan menghentikan proses target ketika:
 
-- Kecepatan unduhan (network) rendah, dan
-- Aktivitas disk (read/write) berada di bawah threshold
-- Dalam durasi stabil yang telah ditentukan
-- Diberhentikan oleh user ("ctrl + c") atau melalui bot Telegram ("/stop")
+- Kecepatan unduhan dan aktivitas disk (read/write)
+  berada dibawah threshold yang telah ditentukan dalam
+  durasi stabil yang telah ditentukan
 
 ---
 
@@ -61,9 +60,13 @@ Script tetap dapat berjalan tanpa "config.yaml".
 
 ## 🤖 Telegram Dashboard
 
-Jika fitur Telegram diaktifkan, tersedia command berikut untuk kontrol dan mointoring:
+Jika fitur Telegram diaktifkan, pastikan untuk mengisi
+token bot dan chat ID di config.yaml.
 
-- "/screenshot" → mengambil screenshot terkini dari device host yang menjalankan script
+tersedia command berikut untuk kontrol dan monitoring:
+
+- "/screenshot" → mengambil screenshot terkini dari
+  device host yang menjalankan script
 - "/stop" → menghentikan proses monitoring
 
 ---
@@ -82,6 +85,7 @@ Sudah diuji pada:
 
 - Gunakan dengan hati-hati karena tool ini dapat menghentikan proses secara otomatis
 - Pastikan konfigurasi threshold sesuai kebutuhan agar tidak terjadi false trigger
+- Bot Telegram bisa didapatkan dari [@BotFather](https://t.me/BotFather)
+- Chat ID bisa didapatkan dari [@userinfobot](https://t.me/userinfobot)
 
----
 ---
