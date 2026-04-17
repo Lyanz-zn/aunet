@@ -4,9 +4,8 @@ aunet adalah tool monitoring proses berbasis network bandwidth dan disk I/O (rea
 
 Tool ini secara otomatis akan menghentikan proses target ketika:
 
-- Kecepatan unduhan dan aktivitas disk (read/write)
-  berada dibawah threshold yang telah ditentukan dalam
-  durasi stabil yang telah ditentukan
+- Kecepatan unduhan dan aktivitas disk (read/write) berada
+  dibawah threshold yang dalam durasi stabil yang telah ditentukan
 
 ---
 
@@ -17,6 +16,7 @@ Tool ini secara otomatis akan menghentikan proses target ketika:
 - Auto terminate proses berdasarkan threshold & durasi
 - Integrasi dengan bot Telegram (dashboard & kontrol)
 - Screenshot device host via Telegram
+- Memutar ringtone sebagai alarm (opsional)
 - Action seletah selesai monitoring (opsional)
 
 ---
@@ -27,7 +27,9 @@ Tool ini secara otomatis akan menghentikan proses target ketika:
 
 Install dependency berikut:
 
+```bash
 pip install psutil pyyaml pyTelegramBotAPI mss pygame
+```
 
 ---
 
