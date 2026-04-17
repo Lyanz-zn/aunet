@@ -13,9 +13,9 @@ koneksi jaringan semua proses.
 """
 
 import os
-import pathlib
 import sys
 import time
+from numpy import printoptions
 import yaml
 import threading
 import argparse
@@ -56,6 +56,7 @@ else:
 TELEGRAM_DASHBOARD_ENABLED: bool = False  # Diisi dari config.yaml atau --debug
 
 BOT_TOKEN: str = ""  # Token Bot Telegram
+BOT_NAME: str | None = ""  # Nama Bot
 CHAT_ID: str = ""  # Chat ID Telegram
 BOT_LISTENER: bool = False  # Aktifkan listener command dari Telegram
 
@@ -419,7 +420,8 @@ class Screenshot:
             img = sct.grab(sct.monitors[1])
             mss.tools.to_png(img.rgb, img.size, output=path)
 
-        return path
+        compressed = self.resize_image(path_input=path)
+        return compressed
 
     def _unique_path(self, directory: str) -> str:
         base = os.path.join(directory, f"{self.prefix}.{self.ext}")
@@ -431,6 +433,36 @@ class Screenshot:
             if not os.path.exists(candidate):
                 return candidate
             i += 1
+
+    def resize_image(
+        self, path_input: str, max_width: int = 1280, quality: int = 80
+    ) -> str:
+        """
+        Me-resize gambar untuk mengurangi ukuran file tanpa merusak kualitas secara drastis.
+
+        Args:
+            path_input: Path file gambar asli.
+            max_width: Lebar maksimal gambar hasil resize.
+            quality: Kualitas JPEG (1-95).
+
+        Returns:
+            Path file yang sudah di-resize (format .jpg).
+        """
+        from PIL import Image
+
+        path_output = os.path.splitext(path_input)[0] + "_compressed.jpg"
+
+        with Image.open(path_input) as img:
+            img = img.convert("RGB")
+
+            if img.width > max_width:
+                ratio = max_width / float(img.width)
+                new_height = int(float(img.height) * float(ratio))
+                img = img.resize((max_width, new_height), Image.Resampling.LANCZOS)
+
+            img.save(path_output, "JPEG", optimize=True, quality=quality)
+
+        return path_output
 
 
 # =============================================================================
@@ -1103,6 +1135,7 @@ def main() -> None:
         CHAT_ID = os.getenv("CHAT_ID", "")
         BOT_LISTENER = True
         DEBUGGING = True
+        TELEGRAM_DASHBOARD_ENABLED = True
         print("[DEBUG] Mode debugging diaktifkan.")
 
     # ── Override POST_MONITORING dari CLI ────────────────────────────────────
@@ -1118,13 +1151,20 @@ def main() -> None:
     bot = TelegramBot(BOT_TOKEN, CHAT_ID)
 
     if TELEGRAM_DASHBOARD_ENABLED:
-        ss = Screenshot("aunet-ss", ".png")
-        print("[INFO] Telegram Dashboard diaktifkan.")
+        try:
+            get_bot_name = bot._tbot.get_me()
+            global BOT_NAME
+            BOT_NAME = get_bot_name.username
+
+            ss = Screenshot("aunet-ss", ".png")
+            print(f"[INFO] Telegram Bot terhubung: @{BOT_NAME}")
+        except Exception as e:
+            print(f"[ERROR] Gagal terhubung ke Telegram Bot: {e}")
 
     # ── Input nama proses ────────────────────────────────────────────────────
     if not TARGET_PROCESS_NAME:
         TARGET_PROCESS_NAME = input(
-            "\nMasukkan nama proses game (contoh: StarRail.exe): "
+            "\nMasukkan nama proses (contoh: StarRail.exe, zen): "
         ).strip()
 
     if not TARGET_PROCESS_NAME:
@@ -1135,7 +1175,9 @@ def main() -> None:
 
     if not procs:
         print(f"\n[ERROR] Proses '{TARGET_PROCESS_NAME}' tidak ditemukan.")
-        print("        Pastikan game sudah berjalan sebelum menjalankan script ini.\n")
+        print(
+            "        Pastikan proses sudah berjalan sebelum menjalankan script ini.\n"
+        )
         sys.exit(1)
 
     clear()
@@ -1144,7 +1186,7 @@ def main() -> None:
 
     # ── Pesan startup ────────────────────────────────────────────────────────
     startup_msgs = [
-        "[INFO] Game Network Monitor dimulai!",
+        "[INFO] Monitor dimulai!",
         f"[INFO] Memantau  : {', '.join(p.name() for p in procs)}",
         f"[INFO] [NET] Threshold : {THRESHOLD_KBPS} KB/s | Interval : {CHECK_INTERVAL}s | Stabil : {fmt_duration(DURATION_STABLE)} ({RETRY_ATTEMPT}x)",
         f"[INFO] [I/O] Threshold : {IO_THRESHOLD_KBPS} KB/s | Interval : {IO_CHECK_INTERVAL}s | Stabil : {fmt_duration(IO_DURATION_STABLE)} ({IO_RETRY_ATTEMPT}x)",
@@ -1152,6 +1194,12 @@ def main() -> None:
     ]
     if POST_MONITORING:
         startup_msgs.append(f"[INFO] Post-action: {POST_MONITORING}")
+
+    if BOT_NAME is not None:
+        link = f"https://t.me/{BOT_NAME}"
+        hyperlink = f"\033]8;;{link}\033\\klik ini\033]8;;\033\\"
+        startup_msgs.insert(1, f"[INFO] Telegram Bot: @{BOT_NAME}")
+        startup_msgs.insert(2, f"[INFO] Buka Bot di {link} atau {hyperlink}")
 
     for m in startup_msgs:
         print(m)
