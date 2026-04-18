@@ -1242,6 +1242,7 @@ if __name__ == "__main__":
             )
             if input("Apakah Anda ingin melanjutkan? (y/n): ").strip().lower() != "y":
                 sys.exit(0)
+
         main()
     except KeyboardInterrupt:
         try:
