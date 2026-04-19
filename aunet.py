@@ -1199,7 +1199,7 @@ def main() -> None:
     for h in header:
         print(h)
 
-    # ── Pesan startup ────────────────────────────────────────────────────────
+    # Pesan Startup
     startup_msgs = [
         "[INFO] Monitor dimulai!",
         f"[INFO] Memantau  : {', '.join(p.name() for p in procs)}",
@@ -1210,11 +1210,13 @@ def main() -> None:
     if POST_MONITORING:
         startup_msgs.append(f"[INFO] Post-action: {POST_MONITORING}")
 
-    if BOT_NAME is not None:
-        link = f"https://t.me/{BOT_NAME}"
-        hyperlink = f"\033]8;;{link}\033\\klik ini\033]8;;\033\\"
-        startup_msgs.insert(1, f"[INFO] Telegram Bot: @{BOT_NAME}")
-        startup_msgs.insert(2, f"[INFO] Buka Bot di {link} atau {hyperlink}")
+    # Info bot
+    if TELEGRAM_DASHBOARD_ENABLED:
+        if BOT_NAME is not None and BOT_NAME != "":
+            link = f"https://t.me/{BOT_NAME}"
+            hyperlink = f"\033]8;;{link}\033\\klik ini\033]8;;\033\\"
+            startup_msgs.insert(1, f"[INFO] Telegram Bot: @{BOT_NAME}")
+            startup_msgs.insert(2, f"[INFO] Buka Bot di {link} atau {hyperlink}")
 
     for m in startup_msgs:
         print(m)
@@ -1222,9 +1224,9 @@ def main() -> None:
 
     if TELEGRAM_DASHBOARD_ENABLED:
         AutoThread(target=bot.flush, args=("startup", "Monitor Started"))
-        time.sleep(0.5)  # Beri jeda agar flush pertama tidak nabrak flush berikutnya
+        time.sleep(0.5)
 
-    # ── Mulai monitoring ─────────────────────────────────────────────────────
+    # Mulai Monitoring
     try:
         monitor(procs)
     except Exception as e:
