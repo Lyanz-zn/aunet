@@ -1,32 +1,31 @@
-# Monitoring Settings
+# Pengaturan Monitoring
 
-# int: integer value
-# float: floating-point value
+# int: nilai bilangan bulat
+# float: nilai desimal
 # bool: true/false
-# str: string value
-# literal: a specific set of string values, e.g., ["option1", "option2", null]
-# optional: the setting is not required, if not provided, the default value will be used
+# str: teks/string
+# literal: pilihan nilai tertentu, misalnya ["option1", "option2", null]
+# optional: tidak wajib diisi, kalau kosong akan pakai nilai default
 
-RETRY_ATTEMPT: 20 # int, optional
-CHECK_INTERVAL: 5 # int (in seconds), optional
-THRESHOLD_KBPS: 100.0 # float (KB/s), recomennded value > 100 KB/s, optional
-DURATION_STABLE: 60 # int (seconds), optional
+RETRY_ATTEMPT: 20 # int, opsional
+CHECK_INTERVAL: 5 # int (dalam detik) disarankan > 5, opsional
+THRESHOLD_KBPS: 100.0 # float (KB/s), disarankan > 100 KB/s, opsional
+DURATION_STABLE: 60 # int (detik), opsional
 
-IO_THRESHOLD_KBPS: 1000.0 # float (KB/s), recomennded value > 1000 KB/s, optional
-IO_CHECK_INTERVAL: 5 # int (in seconds), optional
-IO_RETRY_ATTEMPT: 15 # int, optional
-IO_DURATION_STABLE: 60 # int (seconds), optional
+IO_THRESHOLD_KBPS: 1000.0 # float (KB/s), disarankan > 1000 KB/s, opsional
+IO_CHECK_INTERVAL: 5 # int (dalam detik), opsional
+IO_RETRY_ATTEMPT: 15 # int, opsional
+IO_DURATION_STABLE: 60 # int (detik), opsional
 
-POST_MONITORING: null # What to do after Monitoring complete, value: [ "shutdown", "sleep", null ], optional
-POST_MONITORING_DELAY: 2 # int (seconds), delay before run POST_MONITORING action, optional
+POST_MONITORING: null # Aksi setelah monitoring selesai, pilihan: ["shutdown", "sleep", null], opsional
+POST_MONITORING_DELAY: 60 # int (detik), jeda sebelum menjalankan aksi POST_MONITORING, opsional
 
-RINGTONE: true # bool, optional, whether to play a ringtone when the monitoring is complete, optional
-RINGTONE_LOOP: "loop" # int | literal ["loop"], example value: 5 or "loop". optional, whether to loop the ringtone until stopped, RINGTONE must be true
-RINGTONE_PATH: null # str, optional, path to the ringtone file (mp3 format), RINGTONE must be true, default value is "env/ringtone.mp3" 
+RINGTONE: true # bool, opsional, apakah mau memutar suara saat monitoring selesai
+RINGTONE_LOOP: "loop" # int | literal ["loop"], contoh: 5 atau "loop". opsional, apakah suara diulang sampai dihentikan, RINGTONE harus true
+RINGTONE_PATH: null # str, opsional, lokasi file ringtone (format mp3), RINGTONE harus true, default "lib/ringtone.mp3"
 
-# Your Telegram bot token and the chat ID where you want to receive notifications
+# Token bot Telegram kamu dan chat ID tujuan notifikasi
 
-TELEGRAM_DASHBOARD_ENABLED: false # bool, optional
-BOT_TOKEN: "" # str, TELEGRAM_MONITORING_ENABLED must be true
-CHAT_ID: "" # str, TELEGRAM_MONITORING_ENABLED must be true
-
+TELEGRAM_DASHBOARD_ENABLED: false # bool, opsional
+BOT_TOKEN: "" # str, TELEGRAM_MONITORING_ENABLED wajib true!
+CHAT_ID: "" # str, TELEGRAM_MONITORING_ENABLED wajib true!
