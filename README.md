@@ -24,7 +24,7 @@ Capek nungguin app atau game download dan mau ditinggal tidur atau pergi? **aune
 [5] [Post-action] ──► shutdown / sleep / exit (opsional)
 ```
 
-Kenapa dua fase? Karena setelah download selesai, app atau game biasanya langsung ekstrak file — kalau langsung di-kill di sini, file bisa corrupt. Fase I/O monitoring mastiin proses dekompresi udah bener-bener kelar dulu. **NOTE: Pastikan `IO_THRESHOLD_KBPS` lebih dari `100000.0` biar tidak terjebak loop**
+Kenapa dua fase? Karena setelah download selesai, app atau game biasanya langsung ekstrak file — kalau langsung di-kill di sini, file bisa corrupt. Fase I/O monitoring mastiin proses dekompresi udah bener-bener kelar dulu. **NOTE: Pastikan `IO_THRESHOLD_KBPS` lebih dari `1000.0` (>= 1MB/s) biar tidak terjebak loop**
 
 ---
 
@@ -66,13 +66,13 @@ BOT_TOKEN: "" # Isi dengan token bot Telegram kamu (dapat dari @BotFather)
 CHAT_ID: ""   # Isi dengan chat ID kamu (bisa dapat dari @userinfobot)
 
 # ── Network Monitoring ───────────────────────────────────────
-THRESHOLD_KBPS: 10          # Anggap download selesai jika di bawah ini (KB/s)
+THRESHOLD_KBPS: 500         # Anggap download selesai jika di bawah ini (KB/s)
 CHECK_INTERVAL: 5           # Cek setiap N detik
 RETRY_ATTEMPT: 15           # Butuh N iterasi berturut-turut di bawah threshold
 DURATION_STABLE: 60         # Total durasi stabil (detik, untuk display)
 
 # ── Disk I/O Monitoring ──────────────────────────────────────
-IO_THRESHOLD_KBPS: 100000.0  # Anggap ekstraksi selesai jika di bawah ini (KB/s)
+IO_THRESHOLD_KBPS: 1000.0   # Anggap ekstraksi selesai jika di bawah ini (KB/s)
 IO_CHECK_INTERVAL: 5
 IO_RETRY_ATTEMPT: 12
 IO_DURATION_STABLE: 60
