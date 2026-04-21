@@ -72,7 +72,7 @@ RETRY_ATTEMPT: 15           # Butuh N iterasi berturut-turut di bawah threshold
 DURATION_STABLE: 60         # Total durasi stabil (detik, untuk display)
 
 # ── Disk I/O Monitoring ──────────────────────────────────────
-IO_THRESHOLD_KBPS: 1000.0   # Anggap ekstraksi selesai jika di bawah ini (KB/s)
+IO_THRESHOLD_KBPS: 1000.0   # Anggap ekstraksi selesai jika di bawah ini (KB/s). Pastikan value >= 1000.0 (>= 1MB/s)
 IO_CHECK_INTERVAL: 5
 IO_RETRY_ATTEMPT: 12
 IO_DURATION_STABLE: 60
