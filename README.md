@@ -159,8 +159,6 @@ nuitka aunet.py --lto=yes --standalone --onefile --include-data-file="lib/ringto
 # Output: aunet.exe
 ```
 
-```
-
 ---
 
 ## Struktur Project
