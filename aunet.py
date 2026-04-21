@@ -154,9 +154,9 @@ def load_config(path: str = "config.yaml") -> None:
     """Memuat dan memvalidasi konfigurasi dari file YAML ke variabel global."""
 
     config_schema: dict = {
+        "TELEGRAM_DASHBOARD_ENABLED": bool,
         "BOT_TOKEN": str,
         "CHAT_ID": str,
-        "TELEGRAM_DASHBOARD_ENABLED": bool,
         "THRESHOLD_KBPS": (int, float),
         "CHECK_INTERVAL": int,
         "DURATION_STABLE": int,
@@ -168,9 +168,14 @@ def load_config(path: str = "config.yaml") -> None:
         "IO_RETRY_ATTEMPT": int,
         "IO_DURATION_STABLE": int,
         "RINGTONE": bool,
-        "RINGTONE_LOOP": int | str,
-        "RINGTONE_FILE": str | None,
+        "RINGTONE_LOOP": (int, str),
+        "RINGTONE_FILE": (str, None),
     }
+
+    # Fungsi dipanggil di main
+    if DEBUGGING:
+        for c in ["BOT_TOKEN", "CHAT_ID"]:
+            config_schema.pop(c, None)
 
     try:
         with open(path, "r") as f:
@@ -201,6 +206,9 @@ def load_config(path: str = "config.yaml") -> None:
                             "[SKIP] Value dari  RINGTONE_LOOP hanya boleh int atau 'loop' (string)"
                         )
                         continue
+
+                if not TELEGRAM_DASHBOARD_ENABLED and var in ("BOT_TOKEN", "CHAT_ID"):
+                    continue
 
                 print(f"[SKIP] {var}: String tidak boleh kosong")
                 continue
@@ -1139,7 +1147,6 @@ def main() -> None:
         print(h)
 
     # ── Load konfigurasi YAML ────────────────────────────────────────────────
-    load_config()
 
     # ── Mode debug: ambil token dari .env ────────────────────────────────────
     if args.debug:
@@ -1152,6 +1159,8 @@ def main() -> None:
         DEBUGGING = True
         TELEGRAM_DASHBOARD_ENABLED = True
         print("[DEBUG] Mode debugging diaktifkan.")
+
+    load_config()
 
     # ── Override POST_MONITORING dari CLI ────────────────────────────────────
     if args.post_monitoring:
