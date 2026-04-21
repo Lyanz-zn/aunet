@@ -9,19 +9,19 @@ Capek nungguin app atau game download sambil takut ketiduran? **aunet** bakal ma
 ## Cara Kerjanya
 
 ```
-[1] Monitor Jaringan] ──► turun di bawah threshold N detik
+[1] [Monitor Jaringan] ──► turun di bawah threshold N detik
           │
           ▼
-[2] Monitor Disk I/O] ──► aktivitas disk juga sudah sepi N detik
+[2] [Monitor Disk I/O] ──► aktivitas disk juga sudah sepi N detik
           │
           ▼
-[3] Tunggu POST_MONITORING_DELAY] ──► buffer aman buat proses cleanup
+[3] [Tunggu POST_MONITORING_DELAY] ──► buffer aman buat proses cleanup
           │
           ▼
-[4] Kill Proses] ──► 🔔 Alarm bunyi + notif Telegram
+[4] [Kill Proses] ──► 🔔 Alarm bunyi + notif Telegram
           │
           ▼
-[5] Post-action] ──► shutdown / sleep / exit (opsional)
+[5] [Post-action] ──► shutdown / sleep / exit (opsional)
 ```
 
 Kenapa dua fase? Karena setelah download selesai, app atau game biasanya langsung ekstrak file — kalau langsung di-kill di sini, file bisa corrupt. Fase I/O monitoring mastiin proses dekompresi udah bener-bener kelar dulu.
@@ -57,6 +57,7 @@ Tersedia binary siap pakai di [Releases](../../releases/latest) — nggak perlu 
 ## Konfigurasi
 
 Semua setting ada di `config.yaml` yang sudah ikut di dalam zip/. Edit sesuai kebutuhan sebelum jalanin.
+**aunet berjalan normal tanpa `config.yaml`**
 
 ```yaml
 # ── Telegram (opsional) ──────────────────────────────────────
@@ -76,11 +77,11 @@ IO_CHECK_INTERVAL: 5
 IO_RETRY_ATTEMPT: 12
 IO_DURATION_STABLE: 60
 
-# ── Kill & Post-action ───────────────────────────────────────
+# ── Kill & Post-action (opsional) ────────────────────────────
 POST_MONITORING: "shutdown"   # "shutdown" | "sleep" | "" | null
 POST_MONITORING_DELAY: 180    # Detik jeda sebelum kill (buat cleanup proses)
 
-# ── Ringtone ─────────────────────────────────────────────────
+# ── Ringtone (opsional) ──────────────────────────────────────
 RINGTONE: true  # Aktifkan alarm ringtone saat proses di-kill
 RINGTONE_LOOP: "loop"  # Loop atau putar beberapa kali, value: [int, "loop"]
 RINGTONE_PATH: "lib/ringtone.mp3"  # Path ke file ringtone
@@ -96,11 +97,11 @@ RINGTONE_PATH: "lib/ringtone.mp3"  # Path ke file ringtone
 
 ```bash
 # Binary akan minta nama proses secara interaktif
-./aunet
+.\aunet.exe
 
 # Atau langsung dengan post-monitoring
-./aunet --post-monitoring sleep
-./aunet -pm shutdown
+.\aunet.exe --post-monitoring sleep
+.\aunet.exe -pm shutdown
 ```
 
 ```
@@ -133,7 +134,7 @@ Kalau `TELEGRAM_DASHBOARD_ENABLED: true`, kamu bisa remote aunet dari HP:
 - Dependencies:
 
 ```bash
-pip install psutil pyyaml pyTelegramBotAPI mss Pillow pyappgame
+pip install psutil pyyaml pyTelegramBotAPI mss Pillow pygame
 ```
 
 ### Jalankan Langsung
@@ -141,7 +142,6 @@ pip install psutil pyyaml pyTelegramBotAPI mss Pillow pyappgame
 ```bash
 git clone https://github.com/Lyanz-zn/aunet.git
 cd aunet/
-cp config.yaml.example config.yaml  # edit dulu sesuai kebutuhan
 
 python aunet.py
 python aunet.py --post-monitoring shutdown
@@ -159,12 +159,6 @@ nuitka aunet.py --lto=yes --standalone --onefile --include-data-file="lib/ringto
 # Output: aunet.exe
 ```
 
-**Linux (Arch):**
-
-```bash
-pip install pyinstaller
-nuitka aunet.py --lto=yes --standalone --onefile --include-data-file="lib/ringtone.mp3"="lib/ringtone.mp3" output-file-name=aunet.py
-# Output: aunet
 ```
 
 ---
@@ -172,11 +166,13 @@ nuitka aunet.py --lto=yes --standalone --onefile --include-data-file="lib/ringto
 ## Struktur Project
 
 ```
+
 aunet/
 ├── aunet.py          # Source utama
 ├── config.yaml       # Konfigurasi (ikut dirilis dalam zip/tar.gz)
 ├── lib/ringtone.mp3  # File ringtone default
 └── README.md
+
 ```
 
 ---
