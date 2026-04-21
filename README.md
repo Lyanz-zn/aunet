@@ -15,7 +15,7 @@ Capek nungguin app atau game download dan mau ditinggal tidur atau pergi? **aune
 [2] [Monitor Disk I/O] ──► aktivitas disk juga sudah idle N detik
           │
           ▼
-[3] [Tunggu POST_MONITORING_DELAY] ──► buffer aman buat proses cleanup
+[3] [Tunggu POST_MONITORING_DELAY] ──► tunggu device adem
           │
           ▼
 [4] [Kill Proses] ──► 🔔 Alarm bunyi + notif Telegram
