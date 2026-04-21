@@ -12,7 +12,7 @@ Capek nungguin app atau game download dan mau ditinggal tidur atau pergi? **aune
 [1] [Monitor Jaringan] ──► turun di bawah threshold N detik
           │
           ▼
-[2] [Monitor Disk I/O] ──► aktivitas disk juga sudah sepi N detik
+[2] [Monitor Disk I/O] ──► aktivitas disk juga sudah idle N detik
           │
           ▼
 [3] [Tunggu POST_MONITORING_DELAY] ──► buffer aman buat proses cleanup
