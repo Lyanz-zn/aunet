@@ -2,7 +2,7 @@
 
 > Auto-kill app atau game process setelah download selesai — berbasis network bandwidth + disk I/O monitoring.
 
-Capek nungguin app atau game download sambil takut ketiduran? **aunet** bakal mantau sendiri, tunggu sampai download *dan* ekstraksi beres, lalu matiin prosesnya otomatis. Bisa juga langsung shutdown/sleep PC kamu setelahnya. Ada notifikasi Telegram-nya juga jika diaktifkan.
+Capek nungguin app atau game download dan mau ditinggal tidur atau pergi? **aunet** bakal mantau prosesnya, tunggu sampai download *dan* ekstraksi beres, lalu matiin prosesnya otomatis. Bisa juga langsung shutdown/sleep PC kamu setelahnya. Ada notifikasi Telegram-nya juga jika diaktifkan.
 
 ---
 
