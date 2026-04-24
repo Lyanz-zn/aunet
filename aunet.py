@@ -569,7 +569,6 @@ def count_connections(pids: list[int]) -> int:
 
 def kill_procs(procs: list[psutil.Process]) -> None:
     """Hentikan proses dengan delay agar file punya waktu dekompresi."""
-    print(KILL_PROC)
     if not KILL_PROC:
         return
 
@@ -878,23 +877,34 @@ def monitor(procs: list[psutil.Process]) -> None:
     print(f"║  {'App Network Monitor':^58}  ║")
     print("╚" + "═" * 62 + "╝")
 
-    start_info = [
+    proc_info = [
         f"[✨] Proses        : {names}",
         f"[✨] PID           : {', '.join(str(p) for p in pids)}",
+    ]
+    for m in proc_info:
+        print(m)
+
+    start_info = [
         f"[✨] Threshold     : {THRESHOLD_KBPS} KB/s",
         f"[✨] Interval      : {CHECK_INTERVAL}s",
         f"[✨] Durasi stabil : {fmt_duration(DURATION_STABLE)} ({RETRY_ATTEMPT}x iterasi)",
         f"[✨] Retry attempt : {RETRY_ATTEMPT}",
     ]
-    for info in start_info:
-        print(info)
-        bot.add_log(info, key="start_info")
+    if NET_MONITORING:
+        for info in start_info:
+            print(info)
+            bot.add_log(info, key="start_info")
 
-    AutoThread(target=bot.flush, args=("start_info", "Info"))
+        AutoThread(target=bot.flush, args=("start_info", "Info"))
 
-    print("╔" + "═" * 62 + "╗")
-    print(f"║  {'Waktu':^8}  {'Download':^14}  {'Koneksi':^8}  {'Status':^22}  ║")
-    print("╠" + "═" * 62 + "╣")
+    net_bar = [
+        "╔" + "═" * 62 + "╗",
+        f"║  {'Waktu':^8}  {'Download':^14}  {'Koneksi':^8}  {'Status':^22}  ║",
+        "╠" + "═" * 62 + "╣",
+    ]
+    if NET_MONITORING:
+        for m in net_bar:
+            print(m)
 
     # ── Snapshot awal (dibuang — selisih pertama tidak akurat) ───────────────
     prev = psutil.net_io_counters()
@@ -908,95 +918,96 @@ def monitor(procs: list[psutil.Process]) -> None:
     if BOT_LISTENER:
         bot.start_listener(bot_handler)
 
-    try:
-        while ACTIVE:
-            iteration += 1
+    if NET_MONITORING:
+        try:
+            while ACTIVE:
+                iteration += 1
 
-            # 1. Cek proses masih hidup
-            alive = [p for p in procs if _proc_alive(p)]
+                # 1. Cek proses masih hidup
+                alive = [p for p in procs if _proc_alive(p)]
 
-            if not alive:
-                print()
+                if not alive:
+                    print()
+                    print(
+                        f"║  {time.strftime('%H:%M:%S'):^8}  {'—':^14}  {'—':^8}  "
+                        f"{'Proses berhenti':^22}  ║"
+                    )
+                    print("╠" + "═" * 62 + "╣")
+                    print(
+                        "║  [INFO] Proses tidak berjalan lagi. Monitoring selesai.      ║"
+                    )
+                    break
+
+                procs = alive
+                pids = [p.pid for p in procs]
+
+                # 2. Ukur bandwidth
+                curr = psutil.net_io_counters()
+                curr_time = time.monotonic()
+                dt = curr_time - prev_time
+
+                d_recv = max(0, curr.bytes_recv - prev.bytes_recv)
+                speed_down = d_recv / dt
+
+                total_recv += d_recv
+                prev, prev_time = curr, curr_time
+
+                # 3. Koneksi aktif
+                conn_count = count_connections(pids)
+
+                # 4. Evaluasi threshold
+                if speed_down < threshold_bps:
+                    stable_count += 1
+                    status = (
+                        f"LOW {stable_count}/{RETRY_ATTEMPT}"
+                        if stable_count < RETRY_ATTEMPT
+                        else "KILL TRIGGER"
+                    )
+                else:
+                    stable_count = 0
+                    status = "Aktif"
+
+                # 5. Cetak baris status (overwrite baris yang sama)
+                ts = time.strftime("%H:%M:%S")
+                speed_str = fmt_speed(speed_down)
+                conn_str = f"{conn_count} aktif"
+
                 print(
-                    f"║  {time.strftime('%H:%M:%S'):^8}  {'—':^14}  {'—':^8}  "
-                    f"{'Proses berhenti':^22}  ║"
+                    f"\r║  {ts:^8}  {speed_str:^14}  {conn_str:^8}  {status:^22}  ║",
+                    end="",
+                    flush=True,
                 )
-                print("╠" + "═" * 62 + "╣")
-                print(
-                    "║  [INFO] Proses tidak berjalan lagi. Monitoring selesai.      ║"
-                )
-                break
 
-            procs = alive
-            pids = [p.pid for p in procs]
+                # 6. Push ke Telegram (pakai key terkini agar tepat sasaran)
+                bot.add_log(f"[✨] Time        : {ts}", key=key_status_update)
+                bot.add_log(f"[✨] Download    : {speed_str}", key=key_status_update)
+                bot.add_log(f"[✨] Connections : {conn_str}", key=key_status_update)
+                bot.add_log(f"[✨] Status      : {status}", key=key_status_update)
+                AutoThread(target=bot.flush, args=(key_status_update, "Status Update"))
 
-            # 2. Ukur bandwidth
-            curr = psutil.net_io_counters()
-            curr_time = time.monotonic()
-            dt = curr_time - prev_time
+                # 7. Lanjut ke fase I/O jika net threshold sudah konsisten terpenuhi
+                if stable_count >= RETRY_ATTEMPT:
+                    print()
+                    print("╚" + "═" * 62 + "╝")
+                    print(
+                        f"[TRIGGER] Internet stabil di bawah {THRESHOLD_KBPS} KB/s "
+                        f"selama ≥ {fmt_duration(DURATION_STABLE)}"
+                    )
 
-            d_recv = max(0, curr.bytes_recv - prev.bytes_recv)
-            speed_down = d_recv / dt
+                    break
 
-            total_recv += d_recv
-            prev, prev_time = curr, curr_time
+                time.sleep(CHECK_INTERVAL)
 
-            # 3. Koneksi aktif
-            conn_count = count_connections(pids)
+        except KeyboardInterrupt:
+            _cleanup()
+            print()
+            print("╠" + "═" * 62 + "╣")
+            print("║  [INFO] Monitoring dihentikan oleh user (Ctrl+C).            ║")
+            _finalize(total_recv, iteration)
+            sys.exit(0)
 
-            # 4. Evaluasi threshold
-            if speed_down < threshold_bps:
-                stable_count += 1
-                status = (
-                    f"LOW {stable_count}/{RETRY_ATTEMPT}"
-                    if stable_count < RETRY_ATTEMPT
-                    else "KILL TRIGGER"
-                )
-            else:
-                stable_count = 0
-                status = "Aktif"
-
-            # 5. Cetak baris status (overwrite baris yang sama)
-            ts = time.strftime("%H:%M:%S")
-            speed_str = fmt_speed(speed_down)
-            conn_str = f"{conn_count} aktif"
-
-            print(
-                f"\r║  {ts:^8}  {speed_str:^14}  {conn_str:^8}  {status:^22}  ║",
-                end="",
-                flush=True,
-            )
-
-            # 6. Push ke Telegram (pakai key terkini agar tepat sasaran)
-            bot.add_log(f"[✨] Time        : {ts}", key=key_status_update)
-            bot.add_log(f"[✨] Download    : {speed_str}", key=key_status_update)
-            bot.add_log(f"[✨] Connections : {conn_str}", key=key_status_update)
-            bot.add_log(f"[✨] Status      : {status}", key=key_status_update)
-            AutoThread(target=bot.flush, args=(key_status_update, "Status Update"))
-
-            # 7. Lanjut ke fase I/O jika net threshold sudah konsisten terpenuhi
-            if stable_count >= RETRY_ATTEMPT:
-                print()
-                print("╚" + "═" * 62 + "╝")
-                print(
-                    f"[TRIGGER] Internet stabil di bawah {THRESHOLD_KBPS} KB/s "
-                    f"selama ≥ {fmt_duration(DURATION_STABLE)}"
-                )
-                if IO_MONITORING:
-                    print("[INFO] Melanjutkan ke fase monitoring Disk I/O...")
-                    monitor_io(procs)
-
-                break
-
-            time.sleep(CHECK_INTERVAL)
-
-    except KeyboardInterrupt:
-        _cleanup()
-        print()
-        print("╠" + "═" * 62 + "╣")
-        print("║  [INFO] Monitoring dihentikan oleh user (Ctrl+C).            ║")
-        _finalize(total_recv, iteration)
-        sys.exit(0)
+    if IO_MONITORING:
+        monitor_io(procs)
 
     _cleanup()
 
@@ -1009,7 +1020,7 @@ def monitor(procs: list[psutil.Process]) -> None:
 
     _finalize(total_recv, iteration)
 
-    # ── Putar ringtone jika diaktifkan ───────────────────────────────────────
+    # ──Putar ringtone jika diaktifkan ───────────────────────────────────────
     if RINGTONE:
         if os.path.exists(RINGTONE_PATH):
             player = AudioPlayer()
@@ -1174,6 +1185,11 @@ def main() -> None:
         print("[DEBUG] Mode debugging diaktifkan.")
 
     load_config()
+    if not NET_MONITORING and not IO_MONITORING:
+        print(
+            "[ERROR] Salah satu dari 'NET_MONITORING atau IO_MONITORING harus aktif!'"
+        )
+        sys.exit(1)
 
     # ── Override POST_MONITORING dari CLI ────────────────────────────────────
     if args.post_monitoring:
@@ -1225,8 +1241,12 @@ def main() -> None:
     startup_msgs = [
         "[INFO] Monitor dimulai!",
         f"[INFO] Memantau  : {', '.join(p.name() for p in procs)}",
-        f"[INFO] [NET] Threshold : {THRESHOLD_KBPS} KB/s | Interval : {CHECK_INTERVAL}s | Stabil : {fmt_duration(DURATION_STABLE)} ({RETRY_ATTEMPT}x)",
-        f"[INFO] [I/O] Threshold : {IO_THRESHOLD_KBPS} KB/s | Interval : {IO_CHECK_INTERVAL}s | Stabil : {fmt_duration(IO_DURATION_STABLE)} ({IO_RETRY_ATTEMPT}x)",
+        f"[INFO] [NET] Threshold : {THRESHOLD_KBPS} KB/s | Interval : {CHECK_INTERVAL}s | Stabil : {fmt_duration(DURATION_STABLE)} ({RETRY_ATTEMPT}x)"
+        if NET_MONITORING
+        else "[INFO] Network Monitoring Dinonaktifkan",
+        f"[INFO] [I/O] Threshold : {IO_THRESHOLD_KBPS} KB/s | Interval : {IO_CHECK_INTERVAL}s | Stabil : {fmt_duration(IO_DURATION_STABLE)} ({IO_RETRY_ATTEMPT}x)"
+        if NET_MONITORING
+        else "[INFO] IO Monitoring Dinonaktifkan",
         f"[INFO] Kill delay : {fmt_duration(POST_MONITORING_DELAY)} setelah I/O selesai",
     ]
     if POST_MONITORING:
