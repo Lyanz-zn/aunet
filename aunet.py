@@ -87,6 +87,7 @@ RINGTONE_PATH: str = str(
     os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "lib/ringtone.mp3")
 )
 
+NET_MONITORING: bool = True  # Toggle network monitoring
 THRESHOLD_KBPS: float = 100.0  # KB/s batas bawah kecepatan unduhan
 CHECK_INTERVAL: int = 5  # Detik antar pengukuran
 RETRY_ATTEMPT: int = 15  # Iterasi berturut-turut di bawah threshold sebelum kill
@@ -96,10 +97,13 @@ DURATION_STABLE: int = 60  # Detik total durasi stabil (dipakai untuk display)
 # Dijalankan otomatis setelah monitoring jaringan selesai, sebelum proses di-kill.
 # Tujuan: mendeteksi proses ekstraksi/dekompresi file setelah unduhan selesai.
 
+IO_MONITORING: bool = True  # Toggle IO monitoring
 IO_THRESHOLD_KBPS: float = 1000.0  # KB/s; batas bawah aktivitas disk (read+write)
 IO_CHECK_INTERVAL: int = 5  # Detik antar pengukuran I/O
 IO_RETRY_ATTEMPT: int = 12  # Iterasi stabil berturut-turut sebelum dianggap selesai
 IO_DURATION_STABLE: int = 60  # Detik total stabil (dipakai untuk display)
+
+KILL_PROC: bool = True
 
 DEBUGGING: bool = False
 
@@ -155,6 +159,9 @@ def load_config(path: str = "config.yaml") -> None:
 
     config_schema: dict = {
         "TELEGRAM_DASHBOARD_ENABLED": bool,
+        "NET_MONITORING": bool,
+        "IO_MONITORING": bool,
+        "KILL_PROC": bool,
         "BOT_TOKEN": str,
         "CHAT_ID": str,
         "THRESHOLD_KBPS": (int, float),
@@ -562,6 +569,10 @@ def count_connections(pids: list[int]) -> int:
 
 def kill_procs(procs: list[psutil.Process]) -> None:
     """Hentikan proses dengan delay agar file punya waktu dekompresi."""
+    print(KILL_PROC)
+    if not KILL_PROC:
+        return
+
     try:
         remaining = POST_MONITORING_DELAY
         while remaining >= 0:
@@ -690,7 +701,6 @@ def monitor_io(procs: list[psutil.Process]) -> None:
         print()
         print("[WARNING] io_counters() tidak tersedia (AccessDenied / platform).")
         print("[WARNING] Melewati fase monitoring I/O — langsung ke kill.")
-        kill_procs(procs)
         return
 
     # ── Header ───────────────────────────────────────────────────────────────
@@ -837,7 +847,6 @@ def monitor_io(procs: list[psutil.Process]) -> None:
                 AutoThread(target=bot.flush, args=("io_summary", "Disk I/O Summary"))
 
                 # Masuk ke delay + kill (POST_MONITORING_DELAY ada di sini)
-                kill_procs(procs)
                 return
 
             _cleanup()
@@ -973,8 +982,10 @@ def monitor(procs: list[psutil.Process]) -> None:
                     f"[TRIGGER] Internet stabil di bawah {THRESHOLD_KBPS} KB/s "
                     f"selama ≥ {fmt_duration(DURATION_STABLE)}"
                 )
-                print("[INFO] Melanjutkan ke fase monitoring Disk I/O...")
-                monitor_io(procs)
+                if IO_MONITORING:
+                    print("[INFO] Melanjutkan ke fase monitoring Disk I/O...")
+                    monitor_io(procs)
+
                 break
 
             time.sleep(CHECK_INTERVAL)
@@ -1019,6 +1030,8 @@ def monitor(procs: list[psutil.Process]) -> None:
                 player.stop()
         else:
             print(f"[ERROR] File audio {RINGTONE_PATH} tidak ditemukan")
+
+    kill_procs(procs)
 
     # ── Tindakan setelah monitoring selesai ─────────────────────────────────
     pma = PostMonitoringAction()
