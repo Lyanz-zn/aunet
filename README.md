@@ -2,7 +2,7 @@
 
 > Auto-kill app atau game process setelah download selesai — berbasis network bandwidth + disk I/O monitoring.
 
-Capek nungguin app atau game download sambil takut ketiduran? **aunet** bakal mantau sendiri, tunggu sampai download *dan* ekstraksi beres, lalu matiin prosesnya otomatis. Bisa juga langsung shutdown/sleep PC kamu setelahnya. Ada notifikasi Telegram-nya juga jika diaktifkan.
+Capek nungguin app atau game download dan mau ditinggal tidur atau pergi? **aunet** bakal mantau prosesnya, tunggu sampai download *dan* ekstraksi beres, lalu matiin prosesnya otomatis. Bisa juga langsung shutdown/sleep PC kamu setelahnya. Ada notifikasi Telegram-nya juga jika diaktifkan.
 
 ---
 
@@ -12,10 +12,10 @@ Capek nungguin app atau game download sambil takut ketiduran? **aunet** bakal ma
 [1] [Monitor Jaringan] ──► turun di bawah threshold N detik
           │
           ▼
-[2] [Monitor Disk I/O] ──► aktivitas disk juga sudah sepi N detik
+[2] [Monitor Disk I/O] ──► aktivitas disk juga sudah idle N detik
           │
           ▼
-[3] [Tunggu POST_MONITORING_DELAY] ──► buffer aman buat proses cleanup
+[3] [Tunggu POST_MONITORING_DELAY] ──► tunggu device adem
           │
           ▼
 [4] [Kill Proses] ──► 🔔 Alarm bunyi + notif Telegram
@@ -24,7 +24,7 @@ Capek nungguin app atau game download sambil takut ketiduran? **aunet** bakal ma
 [5] [Post-action] ──► shutdown / sleep / exit (opsional)
 ```
 
-Kenapa dua fase? Karena setelah download selesai, app atau game biasanya langsung ekstrak file — kalau langsung di-kill di sini, file bisa corrupt. Fase I/O monitoring mastiin proses dekompresi udah bener-bener kelar dulu.
+Kenapa dua fase? Karena setelah download selesai, app atau game biasanya langsung ekstrak file — kalau langsung di-kill di sini, file bisa corrupt. Fase I/O monitoring mastiin proses dekompresi udah bener-bener kelar dulu. **NOTE: Pastikan `IO_THRESHOLD_KBPS` lebih dari `1000.0` (>= 1MB/s) biar tidak terjebak loop**
 
 ---
 
@@ -66,13 +66,13 @@ BOT_TOKEN: "" # Isi dengan token bot Telegram kamu (dapat dari @BotFather)
 CHAT_ID: ""   # Isi dengan chat ID kamu (bisa dapat dari @userinfobot)
 
 # ── Network Monitoring ───────────────────────────────────────
-THRESHOLD_KBPS: 10          # Anggap download selesai jika di bawah ini (KB/s)
+THRESHOLD_KBPS: 500         # Anggap download selesai jika di bawah ini (KB/s)
 CHECK_INTERVAL: 5           # Cek setiap N detik
 RETRY_ATTEMPT: 15           # Butuh N iterasi berturut-turut di bawah threshold
 DURATION_STABLE: 60         # Total durasi stabil (detik, untuk display)
 
 # ── Disk I/O Monitoring ──────────────────────────────────────
-IO_THRESHOLD_KBPS: 100      # Anggap ekstraksi selesai jika di bawah ini (KB/s)
+IO_THRESHOLD_KBPS: 1000.0   # Anggap ekstraksi selesai jika di bawah ini (KB/s). Pastikan value >= 1000.0 (>= 1MB/s)
 IO_CHECK_INTERVAL: 5
 IO_RETRY_ATTEMPT: 12
 IO_DURATION_STABLE: 60
@@ -157,8 +157,6 @@ Binary compile menggunakan Nuitka
 pip install nuitka 
 nuitka aunet.py --lto=yes --standalone --onefile --include-data-file="lib/ringtone.mp3"="lib/ringtone.mp3" output-file-name=aunet.py
 # Output: aunet.exe
-```
-
 ```
 
 ---
