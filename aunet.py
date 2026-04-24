@@ -1220,15 +1220,29 @@ def main() -> None:
         startup_msgs.append(f"[INFO] Post-action: {POST_MONITORING}")
 
     # Info bot
+    temp_bot_starter = []
     if TELEGRAM_DASHBOARD_ENABLED:
         if BOT_NAME is not None and BOT_NAME != "":
             link = f"https://t.me/{BOT_NAME}"
             hyperlink = f"\033]8;;{link}\033\\klik ini\033]8;;\033\\"
-            startup_msgs.insert(1, f"[INFO] Telegram Bot: @{BOT_NAME}")
-            startup_msgs.insert(2, f"[INFO] Buka Bot di {link} atau {hyperlink}")
+            temp_bot_starter = [
+                f"[INFO] Telegram Bot: @{BOT_NAME}",
+                f"[INFO] Buka Bot di {link} atau {hyperlink}",
+            ]
+            idx_temp = 1
+            for m in temp_bot_starter:
+                startup_msgs.insert(idx_temp, m)
+                idx_temp += 1
 
-    for m in startup_msgs:
+    for idx, m in enumerate(startup_msgs):
         print(m)
+
+        if temp_bot_starter:
+            if idx == 1:
+                continue
+            elif idx == 2:
+                continue
+
         bot.add_log(m, key="startup")
 
     if TELEGRAM_DASHBOARD_ENABLED:
