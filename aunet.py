@@ -47,24 +47,22 @@ ACTIVE: bool = True  # Kontroller loop utama
 
 IS_ADMIN: bool = False
 
-if os.name == "nt":
+if sys.platform == "win32":
     USER_OS = "nt"
     try:
         IS_ADMIN = windll.shell32.IsUserAnAdmin() != 0
     except Exception:
         IS_ADMIN = False
 
-elif os.name == "posix":
+elif sys.platform.startswith("linux") or sys.platform == "darwin":
     USER_OS = "posix"
     try:
         IS_ADMIN = os.geteuid() == 0
 
     except AttributeError:
         IS_ADMIN = False
-
 else:
     raise UnsupportedOSError()
-
 
 # ── Konfigurasi Telegram ─────────────────────────────────────────────────────
 
@@ -155,6 +153,7 @@ def load_config(path: str = "config.yaml") -> None:
 
     config_schema: dict = {
         "TELEGRAM_DASHBOARD_ENABLED": bool,
+        "BOT_LISTENER": bool,
         "BOT_TOKEN": str,
         "CHAT_ID": str,
         "THRESHOLD_KBPS": (int, float),
@@ -439,7 +438,7 @@ class Screenshot:
         temp_dir = tempfile.gettempdir()
         path = self._unique_path(temp_dir)
 
-        with mss.mss() as sct:
+        with mss.MSS() as sct:
             img = sct.grab(sct.monitors[1])
             mss.tools.to_png(img.rgb, img.size, output=path)
 
