@@ -9,10 +9,10 @@
 
 RETRY_ATTEMPT: 20 # int, opsional
 CHECK_INTERVAL: 5 # int (dalam detik) disarankan > 5, opsional
-THRESHOLD_KBPS: 100.0 # float (KB/s), disarankan > 100 KB/s, opsional
+THRESHOLD_KBPS: 1000.0 # float (KB/s), disarankan > 100 KB/s, opsional
 DURATION_STABLE: 60 # int (detik), opsional
 
-IO_THRESHOLD_KBPS: 1000.0 # float (KB/s), disarankan > 1000 KB/s, opsional
+IO_THRESHOLD_KBPS: 2000.0 # float (KB/s), disarankan > 1000 KB/s, opsional
 IO_CHECK_INTERVAL: 5 # int (dalam detik), opsional
 IO_RETRY_ATTEMPT: 15 # int, opsional
 IO_DURATION_STABLE: 60 # int (detik), opsional
@@ -27,5 +27,6 @@ RINGTONE_PATH: null # str, opsional, lokasi file ringtone (format mp3), RINGTONE
 # Token bot Telegram kamu dan chat ID tujuan notifikasi
 
 TELEGRAM_DASHBOARD_ENABLED: false # bool, opsional
+BOT_LISTENER: false # bool, opsional. Aktifkan agar bot bisa menerima perintah
 BOT_TOKEN: "" # str, TELEGRAM_MONITORING_ENABLED wajib true!
 CHAT_ID: "" # str, TELEGRAM_MONITORING_ENABLED wajib true!
